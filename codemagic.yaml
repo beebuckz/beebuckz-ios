@@ -29,7 +29,7 @@ workflows:
   #    Requires an Apple Developer account ($99/yr). Before running:
   #      • In Codemagic: Teams → Integrations → App Store Connect → add an API key,
   #        name it exactly "CodemagicASC" (or change the name below).
-  #      • Create the app in App Store Connect with bundle id com.beebuckz.beebuckz
+  #      • Create the app in App Store Connect with bundle id com.beebuckz.app
   #        and put its numeric Apple ID in APP_STORE_APPLE_ID below.
   # ---------------------------------------------------------------------------
   ios-release:
@@ -41,7 +41,7 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.beebuckz.beebuckz
+        bundle_identifier: com.beebuckz.app
       vars:
         APP_STORE_APPLE_ID: 0000000000   # <-- replace with your App Store Connect app Apple ID
       flutter: stable
