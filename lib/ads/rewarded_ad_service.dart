@@ -54,11 +54,15 @@ class RewardedAdService {
 
   /// Shows the rewarded ad if one is ready. Returns true if shown,
   /// false if no ad was ready (and kicks off a reload).
-  Future<bool> show() async {
+  ///
+  /// [userId] is passed to AppLovin as the ad's customData so your backend can
+  /// match AppLovin's server-side reward callback (S2S) to the right user and
+  /// credit Buckz securely (can't be faked client-side).
+  Future<bool> show({String? userId}) async {
     final ready = await AppLovinMAX.isRewardedAdReady(adUnitId) ?? false;
     if (ready) {
       _rewardGranted = false;
-      AppLovinMAX.showRewardedAd(adUnitId);
+      AppLovinMAX.showRewardedAd(adUnitId, customData: userId);
       return true;
     }
     AppLovinMAX.loadRewardedAd(adUnitId);

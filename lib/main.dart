@@ -115,11 +115,26 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
   }
 
   /// Handles messages posted from the web page via `FlutterAds.postMessage`.
-  /// Supported messages: 'showRewarded', 'showInterstitial'.
+  /// Accepts either a plain string ('showRewarded' | 'showInterstitial') or a
+  /// JSON object like {"action":"showRewarded","userId":"123"} — passing the
+  /// userId lets AppLovin's server-side reward callback credit the right user.
   Future<void> _onWebAdMessage(JavaScriptMessage message) async {
-    switch (message.message) {
+    var action = message.message;
+    String? userId;
+    final raw = message.message.trim();
+    if (raw.startsWith('{')) {
+      try {
+        final map = jsonDecode(raw) as Map<String, dynamic>;
+        action = (map['action'] ?? '') as String;
+        userId = map['userId'] as String?;
+      } catch (_) {
+        return;
+      }
+    }
+
+    switch (action) {
       case 'showRewarded':
-        final shown = await _rewardedAds.show();
+        final shown = await _rewardedAds.show(userId: userId);
         if (!shown) {
           // Tell the web app no ad was ready so it can show a "try again" state.
           _controller.runJavaScript(
