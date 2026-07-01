@@ -53,12 +53,13 @@ workflows:
       - name: Set up code signing (create cert + profile if missing)
         script: |
           keychain initialize
-          # Generate a private key so fetch-signing-files can CREATE a
-          # distribution certificate (not just the provisioning profile).
-          openssl genrsa -out /tmp/ios_dist_key.pem 2048
+          # Use a STABLE committed private key so fetch-signing-files reuses the
+          # same distribution certificate every build instead of creating a new
+          # one each time (Apple caps distribution certs, so per-build keys hit
+          # the limit). Creates the cert + profile on first run, reuses after.
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --certificate-key=@file:/tmp/ios_dist_key.pem \
+            --certificate-key=@file:ios/signing/dist_key.pem \
             --create
           keychain add-certificates
           xcode-project use-profiles
