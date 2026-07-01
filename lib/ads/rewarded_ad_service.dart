@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:applovin_max/applovin_max.dart';
 
+import 'ad_state.dart';
+
 /// Manages a single AppLovin MAX rewarded ad unit: keeps one preloaded,
 /// shows it on demand, auto-reloads, and fires [onRewardEarned] only after
 /// the user has actually earned the reward AND closed the ad.
@@ -29,11 +31,14 @@ class RewardedAdService {
         Future.delayed(Duration(seconds: seconds),
             () => AppLovinMAX.loadRewardedAd(adUnitId));
       },
-      onAdDisplayedCallback: (ad) {},
-      onAdDisplayFailedCallback: (ad, error) =>
-          AppLovinMAX.loadRewardedAd(adUnitId),
+      onAdDisplayedCallback: (ad) => AdState.fullscreenVisible = true,
+      onAdDisplayFailedCallback: (ad, error) {
+        AdState.fullscreenVisible = false;
+        AppLovinMAX.loadRewardedAd(adUnitId);
+      },
       onAdClickedCallback: (ad) {},
       onAdHiddenCallback: (ad) {
+        AdState.fullscreenVisible = false;
         // Preload the next ad immediately.
         AppLovinMAX.loadRewardedAd(adUnitId);
         // Only credit once the ad is closed and a reward was earned.

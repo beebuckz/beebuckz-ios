@@ -6,17 +6,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'ads/app_open_ad_service.dart';
+import 'ads/interstitial_ad_service.dart';
 import 'ads/rewarded_ad_service.dart';
 
 // ---------------------------------------------------------------------------
-// AppLovin MAX configuration — REPLACE these two placeholders with the real
-// values from your AppLovin dashboard (https://dash.applovin.com):
+// AppLovin MAX configuration — REPLACE these placeholders with the real values
+// from your AppLovin dashboard (https://dash.applovin.com):
 //   1. SDK key:   Account → Keys → "SDK Key"
-//   2. Ad unit:   MAX → Ad Units → create a "Rewarded" ad unit for iOS,
-//                 then paste its Ad Unit ID here.
+//   2. Ad units:  MAX → Ad Units → create one each of Rewarded / Interstitial /
+//                 App Open for iOS, then paste their Ad Unit IDs below.
 // ---------------------------------------------------------------------------
 const String _appLovinSdkKey = 'YOUR_APPLOVIN_SDK_KEY';
 const String _rewardedAdUnitId = 'YOUR_REWARDED_AD_UNIT_ID';
+const String _interstitialAdUnitId = 'YOUR_INTERSTITIAL_AD_UNIT_ID';
+const String _appOpenAdUnitId = 'YOUR_APP_OPEN_AD_UNIT_ID';
 
 const String _siteUrl = 'https://beebuckz.com';
 
@@ -49,19 +53,25 @@ class WebViewPage extends StatefulWidget {
   State<WebViewPage> createState() => _WebViewPageState();
 }
 
-class _WebViewPageState extends State<WebViewPage> {
+class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
   late final WebViewController _controller;
   late final RewardedAdService _rewardedAds;
+  late final InterstitialAdService _interstitialAds;
+  late final AppOpenAdService _appOpenAds;
+  bool _adsReady = false;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     _rewardedAds = RewardedAdService(
       adUnitId: _rewardedAdUnitId,
       onRewardEarned: _creditRewardToWeb,
     );
+    _interstitialAds = InterstitialAdService(adUnitId: _interstitialAdUnitId);
+    _appOpenAds = AppOpenAdService(adUnitId: _appOpenAdUnitId);
 
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -90,18 +100,35 @@ class _WebViewPageState extends State<WebViewPage> {
     final config = await AppLovinMAX.initialize(_appLovinSdkKey);
     if (config != null) {
       _rewardedAds.init();
+      _interstitialAds.init();
+      _appOpenAds.init();
+      _adsReady = true;
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Show an app-open ad when the user returns to the foreground.
+    if (state == AppLifecycleState.resumed && _adsReady) {
+      _appOpenAds.showIfAvailable();
     }
   }
 
   /// Handles messages posted from the web page via `FlutterAds.postMessage`.
+  /// Supported messages: 'showRewarded', 'showInterstitial'.
   Future<void> _onWebAdMessage(JavaScriptMessage message) async {
-    if (message.message == 'showRewarded') {
-      final shown = await _rewardedAds.show();
-      if (!shown) {
-        // Tell the web app no ad was ready so it can show a "try again" state.
-        _controller.runJavaScript(
-            'window.onBeeAdUnavailable && window.onBeeAdUnavailable();');
-      }
+    switch (message.message) {
+      case 'showRewarded':
+        final shown = await _rewardedAds.show();
+        if (!shown) {
+          // Tell the web app no ad was ready so it can show a "try again" state.
+          _controller.runJavaScript(
+              'window.onBeeAdUnavailable && window.onBeeAdUnavailable();');
+        }
+        break;
+      case 'showInterstitial':
+        await _interstitialAds.show();
+        break;
     }
   }
 
@@ -111,6 +138,12 @@ class _WebViewPageState extends State<WebViewPage> {
     final payload = jsonEncode({'source': 'applovin_rewarded'});
     _controller
         .runJavaScript('window.onBeeReward && window.onBeeReward($payload);');
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override
