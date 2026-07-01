@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod +x *)",
+      "Bash(bash *)",
+      "Bash(flutter clean *)",
+      "Bash(flutter pub *)",
+      "Bash(flutter build *)",
+      "Read(//root/**)",
+      "Bash(systemctl list-units *)",
+      "Read(//etc/nginx/sites-enabled/**)",
+      "Read(//etc/nginx/**)",
+      "Bash(nginx -t)",
+      "Bash(systemctl reload *)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/auth/v1/admin/users -H 'Authorization: Bearer eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogInNlcnZpY2Vfcm9sZSIsICJpc3MiOiAic3VwYWJhc2UiLCAiaWF0IjogMTc4MjI5ODcwMSwgImV4cCI6IDIwOTc2NTg3MDF9.ZgtbMRXIWBhlpHS156yjsWxZPYvivBZTbZNo6nmIvBA' -H 'apikey: eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogInNlcnZpY2Vfcm9sZSIsICJpc3MiOiAic3VwYWJhc2UiLCAiaWF0IjogMTc4MjI5ODcwMSwgImV4cCI6IDIwOTc2NTg3MDF9.ZgtbMRXIWBhlpHS156yjsWxZPYvivBZTbZNo6nmIvBA' -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(curl *)"
+    ]
+  }
+}

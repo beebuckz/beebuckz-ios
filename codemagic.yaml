@@ -1,0 +1,65 @@
+workflows:
+  # ---------------------------------------------------------------------------
+  # 1) Quick unsigned build — verifies the app compiles on a real Mac/Xcode.
+  #    Produces a Runner.app (installable on the iOS Simulator only, not devices).
+  #    Needs NO Apple Developer account — run this first to confirm everything works.
+  # ---------------------------------------------------------------------------
+  ios-unsigned:
+    name: iOS unsigned (verify build)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Flutter pub get
+        script: flutter pub get
+      - name: Pod install
+        script: find . -name "Podfile" -execdir pod install \;
+      - name: Analyze
+        script: flutter analyze
+      - name: Build unsigned iOS
+        script: flutter build ios --release --no-codesign
+    artifacts:
+      - build/ios/iphoneos/Runner.app
+
+  # ---------------------------------------------------------------------------
+  # 2) Signed release → TestFlight / App Store.
+  #    Requires an Apple Developer account ($99/yr). Before running:
+  #      • In Codemagic: Teams → Integrations → App Store Connect → add an API key,
+  #        name it exactly "CodemagicASC" (or change the name below).
+  #      • Create the app in App Store Connect with bundle id com.beebuckz.beebuckz
+  #        and put its numeric Apple ID in APP_STORE_APPLE_ID below.
+  # ---------------------------------------------------------------------------
+  ios-release:
+    name: iOS release (TestFlight)
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    integrations:
+      app_store_connect: CodemagicASC
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.beebuckz.beebuckz
+      vars:
+        APP_STORE_APPLE_ID: 0000000000   # <-- replace with your App Store Connect app Apple ID
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Flutter pub get
+        script: flutter pub get
+      - name: Pod install
+        script: find . -name "Podfile" -execdir pod install \;
+      - name: Set up code signing
+        script: xcode-project use-profiles
+      - name: Build signed IPA
+        script: flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
