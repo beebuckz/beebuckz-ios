@@ -8,6 +8,20 @@
 	<false/>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Your data is used to show you more relevant ads and rewards.</string>
+	<!-- Facebook App Events — REPLACE the two placeholders with your real
+	     values from developers.facebook.com → your app → Settings → Basic:
+	       FacebookAppID     = the numeric App ID
+	       FacebookClientToken = Settings → Advanced → Client Token -->
+	<key>FacebookAppID</key>
+	<string>000000000000000</string>
+	<key>FacebookClientToken</key>
+	<string>REPLACE_WITH_FACEBOOK_CLIENT_TOKEN</string>
+	<key>FacebookDisplayName</key>
+	<string>Bee Buckz</string>
+	<key>FacebookAutoLogAppEventsEnabled</key>
+	<true/>
+	<key>FacebookAdvertiserIDCollectionEnabled</key>
+	<true/>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict><key>SKAdNetworkIdentifier</key><string>ludvb6z3bs.skadnetwork</string></dict>

@@ -9,6 +9,7 @@ environment:
 dependencies:
   app_tracking_transparency: ^2.0.7
   applovin_max: ^4.6.4
+  facebook_app_events: ^0.30.1
   flutter:
     sdk: flutter
   webview_flutter: ^4.7.0

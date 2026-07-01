@@ -9,6 +9,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'ads/app_open_ad_service.dart';
 import 'ads/interstitial_ad_service.dart';
 import 'ads/rewarded_ad_service.dart';
+import 'events/facebook_events.dart';
 
 // ---------------------------------------------------------------------------
 // AppLovin MAX configuration — REPLACE these placeholders with the real values
@@ -58,6 +59,7 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
   late final RewardedAdService _rewardedAds;
   late final InterstitialAdService _interstitialAds;
   late final AppOpenAdService _appOpenAds;
+  final FacebookEvents _fbEvents = FacebookEvents();
   bool _adsReady = false;
   bool _isLoading = true;
 
@@ -79,6 +81,9 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
       // The website calls: FlutterAds.postMessage('showRewarded')
       // to play a rewarded ad. On success we call window.onBeeReward().
       ..addJavaScriptChannel('FlutterAds', onMessageReceived: _onWebAdMessage)
+      // The website calls: FlutterEvents.postMessage(JSON) to log Meta events.
+      ..addJavaScriptChannel('FlutterEvents',
+          onMessageReceived: _onWebEventMessage)
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (_) => setState(() => _isLoading = true),
@@ -95,7 +100,10 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
     // iOS requires the App Tracking Transparency prompt before ads can use
     // tracking data. Ask after a short delay so it doesn't clash with launch.
     await Future.delayed(const Duration(milliseconds: 800));
-    await AppTrackingTransparency.requestTrackingAuthorization();
+    final status = await AppTrackingTransparency.requestTrackingAuthorization();
+    // Tell Meta whether it may use advertiser tracking (drives campaign ROAS).
+    await _fbEvents.setAdvertiserTracking(
+        status == TrackingStatus.authorized);
 
     final config = await AppLovinMAX.initialize(_appLovinSdkKey);
     if (config != null) {
@@ -144,6 +152,17 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
       case 'showInterstitial':
         await _interstitialAds.show();
         break;
+    }
+  }
+
+  /// Handles Meta app-event messages posted from the web via
+  /// `FlutterEvents.postMessage(JSON.stringify({event, valueToSum, ...}))`.
+  Future<void> _onWebEventMessage(JavaScriptMessage message) async {
+    try {
+      final data = jsonDecode(message.message) as Map<String, dynamic>;
+      await _fbEvents.log(data);
+    } catch (_) {
+      // Ignore malformed event payloads.
     }
   }
 
