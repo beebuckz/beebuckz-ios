@@ -39,11 +39,9 @@ workflows:
     integrations:
       app_store_connect: BeeBuckz
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.beebuckz.app
       vars:
         APP_STORE_APPLE_ID: 6786223432   # BeeBuckz — com.beebuckz.app
+        BUNDLE_ID: "com.beebuckz.app"
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -52,8 +50,14 @@ workflows:
         script: flutter pub get
       - name: Pod install
         script: find . -name "Podfile" -execdir pod install \;
-      - name: Set up code signing
-        script: xcode-project use-profiles
+      - name: Set up code signing (create cert + profile if missing)
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
       - name: Build signed IPA
         script: flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
     artifacts:
