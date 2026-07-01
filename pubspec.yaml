@@ -1,12 +1,14 @@
 name: beebuckz
 description: Bee Buckz — earn rewards for completing tasks.
-version: 1.0.0+2
+version: 1.0.0+3
 publish_to: none
 
 environment:
   sdk: ">=3.2.0 <4.0.0"
 
 dependencies:
+  app_tracking_transparency: ^2.0.7
+  applovin_max: ^4.6.4
   flutter:
     sdk: flutter
   webview_flutter: ^4.7.0
