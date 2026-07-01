@@ -28,7 +28,7 @@ workflows:
   # 2) Signed release → TestFlight / App Store.
   #    Requires an Apple Developer account ($99/yr). Before running:
   #      • In Codemagic: Teams → Integrations → App Store Connect → add an API key,
-  #        name it exactly "CodemagicASC" (or change the name below).
+  #        the key is named "BeeBuckz" in Codemagic (must match below).
   #      • Create the app in App Store Connect with bundle id com.beebuckz.app
   #        and put its numeric Apple ID in APP_STORE_APPLE_ID below.
   # ---------------------------------------------------------------------------
@@ -37,7 +37,7 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 90
     integrations:
-      app_store_connect: CodemagicASC
+      app_store_connect: BeeBuckz
     environment:
       ios_signing:
         distribution_type: app_store
