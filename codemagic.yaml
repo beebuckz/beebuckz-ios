@@ -43,7 +43,7 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.beebuckz.app
       vars:
-        APP_STORE_APPLE_ID: 0000000000   # <-- replace with your App Store Connect app Apple ID
+        APP_STORE_APPLE_ID: 6786223432   # BeeBuckz — com.beebuckz.app
       flutter: stable
       xcode: latest
       cocoapods: default
