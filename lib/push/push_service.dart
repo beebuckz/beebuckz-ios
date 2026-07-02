@@ -7,7 +7,8 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 /// Registers this device for push notifications:
 ///  1. asks for notification permission (iOS + Android 13+),
-///  2. sends the FCM token to the BeeBuckz backend (anonymous at first),
+///  2. sends the device push token to the BeeBuckz backend (FCM token on
+///     Android, raw APNs token on iOS — matching how the backend sends),
 ///  3. hands the token to the web app inside the WebView, which re-posts it
 ///     with the member's Supabase session — binding the token to the account,
 ///  4. re-registers on token rotation and opens notification-tap URLs.
@@ -30,15 +31,21 @@ class PushService {
       if (Platform.isIOS) {
         await messaging.setForegroundNotificationPresentationOptions(
             alert: true, badge: true, sound: true);
-        // getToken needs the APNs token first; give it a moment to arrive.
-        for (var i = 0; i < 10 && await messaging.getAPNSToken() == null; i++) {
+        // The backend pushes to iOS directly through APNs, so register the
+        // raw APNs device token — an FCM token would only be deliverable
+        // with the APNs key uploaded to the Firebase console.
+        String? apnsToken;
+        for (var i = 0;
+            i < 10 && (apnsToken = await messaging.getAPNSToken()) == null;
+            i++) {
           await Future.delayed(const Duration(seconds: 1));
         }
+        if (apnsToken != null) await _onNewToken(apnsToken);
+      } else {
+        final token = await messaging.getToken();
+        if (token != null) await _onNewToken(token);
+        messaging.onTokenRefresh.listen(_onNewToken);
       }
-
-      final token = await messaging.getToken();
-      if (token != null) await _onNewToken(token);
-      messaging.onTokenRefresh.listen(_onNewToken);
 
       // Notification taps: open the URL the push carries in the WebView.
       FirebaseMessaging.onMessageOpenedApp.listen(_openFromMessage);
@@ -82,7 +89,10 @@ class PushService {
 
   void _openFromMessage(RemoteMessage message) {
     final url = message.data['url'];
-    if (url is String && url.startsWith('https://beebuckz.com')) {
+    // Exact-origin check ('https://beebuckz.com.evil.com' must not pass).
+    if (url is String &&
+        (url == 'https://beebuckz.com' ||
+            url.startsWith('https://beebuckz.com/'))) {
       _controller.loadRequest(Uri.parse(url));
     }
   }

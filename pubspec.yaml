@@ -1,6 +1,6 @@
 name: beebuckz
 description: Bee Buckz — earn rewards for completing tasks.
-version: 1.0.0+6
+version: 1.0.0+7
 publish_to: none
 
 environment:
