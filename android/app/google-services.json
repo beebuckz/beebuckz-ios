@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "85001859312",
+    "project_id": "beebuckz-dd620",
+    "storage_bucket": "beebuckz-dd620.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:85001859312:android:028e561a4923eca4b6d235",
+        "android_client_info": {
+          "package_name": "com.beebuckz.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0z2psV6FGgQ60bWgwwut70bIEbtNJUrI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

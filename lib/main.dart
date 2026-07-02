@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
@@ -10,6 +11,7 @@ import 'ads/app_open_ad_service.dart';
 import 'ads/interstitial_ad_service.dart';
 import 'ads/rewarded_ad_service.dart';
 import 'events/facebook_events.dart';
+import 'push/push_service.dart';
 
 // ---------------------------------------------------------------------------
 // AppLovin MAX configuration — REPLACE these placeholders with the real values
@@ -59,6 +61,7 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
   late final RewardedAdService _rewardedAds;
   late final InterstitialAdService _interstitialAds;
   late final AppOpenAdService _appOpenAds;
+  late final PushService _push;
   final FacebookEvents _fbEvents = FacebookEvents();
   bool _adsReady = false;
   bool _isLoading = true;
@@ -87,11 +90,17 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (_) => setState(() => _isLoading = true),
-          onPageFinished: (_) => setState(() => _isLoading = false),
+          onPageFinished: (_) {
+            setState(() => _isLoading = false);
+            // Re-hand the FCM token to the web app (page loads wipe JS state).
+            _push.injectIntoWeb();
+          },
           onNavigationRequest: (request) => NavigationDecision.navigate,
         ),
       )
       ..loadRequest(Uri.parse(_siteUrl));
+
+    _push = PushService(_controller);
 
     _initAds();
   }
@@ -104,6 +113,9 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
     // Tell Meta whether it may use advertiser tracking (drives campaign ROAS).
     await _fbEvents.setAdvertiserTracking(
         status == TrackingStatus.authorized);
+
+    // Ask for notification permission once the ATT prompt is out of the way.
+    unawaited(_push.init());
 
     final config = await AppLovinMAX.initialize(_appLovinSdkKey);
     if (config != null) {

@@ -1,6 +1,6 @@
 name: beebuckz
 description: Bee Buckz — earn rewards for completing tasks.
-version: 1.0.0+3
+version: 1.0.0+6
 publish_to: none
 
 environment:
@@ -10,6 +10,8 @@ dependencies:
   app_tracking_transparency: ^2.0.7
   applovin_max: ^4.6.4
   facebook_app_events: ^0.30.1
+  firebase_core: ^4.0.0
+  firebase_messaging: ^16.0.0
   flutter:
     sdk: flutter
   webview_flutter: ^4.7.0
